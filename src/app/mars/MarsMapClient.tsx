@@ -4,20 +4,22 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { PolygonManager } from "@/components/maps/PolygonManager";
+import PolygonDrawer from "@/components/maps/PolygonDrawer";
 import styles from "./mars.module.scss";
+
+// Fix Leaflet icons
+import "leaflet-defaulticon-compatibility";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 
 export default function MarsMapClient() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<L.Map | null>(null);
-  const [userId] = useState("user_123");
-  const [isDrawing, setIsDrawing] = useState(false);
-
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [mousePos, setMousePos] = useState<{ lat: number; lng: number } | null>(
     null
   );
+  const [labelCount, setLabelCount] = useState(0);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -70,6 +72,25 @@ export default function MarsMapClient() {
     };
   }, []);
 
+  const handlePolygonSaved = async (
+    label: string,
+    coordinates: [number, number][]
+  ) => {
+    try {
+      // TODO: Replace with your real API call
+      console.log("Saving polygon:", { label, coordinates });
+
+      // Mock API call
+      await new Promise((r) => setTimeout(r, 300));
+
+      setLabelCount((c) => c + 1);
+      alert(`✓ Label "${label}" saved successfully!`);
+    } catch (err) {
+      console.error("Failed to save:", err);
+      alert("✗ Failed to save label");
+    }
+  };
+
   const getTileCoords = () => {
     const scale = Math.pow(2, zoom);
     const worldTiles = scale * 2;
@@ -80,34 +101,13 @@ export default function MarsMapClient() {
 
   return (
     <div className={`${styles.marsContainer} relative w-full h-screen`}>
-      <button
-        disabled={isDrawing}
-        onClick={() => !isDrawing && setIsDrawing(true)}
-        className={`absolute top-4 left-4 z-[1000] p-2 rounded shadow ${
-          isDrawing
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 text-white"
-        }`}
-      >
-        {isDrawing ? "✏️ Drawing..." : "✏️ Draw Area"}
-      </button>
-
-      {/* ✅ Map container with fixed height */}
       <div
         ref={mapRef}
         className="absolute inset-0 z-0"
         style={{ height: "100vh", width: "100%" }}
       />
 
-      {map && (
-        <PolygonManager
-          map={map}
-          planet="mars"
-          userId={userId}
-          isDrawing={isDrawing}
-          onDrawingComplete={() => setIsDrawing(false)}
-        />
-      )}
+      {map && <PolygonDrawer map={map} onPolygonSaved={handlePolygonSaved} />}
 
       <div className={styles.infoPanel}>
         <h3>🔴 Mars Explorer</h3>
@@ -139,6 +139,11 @@ export default function MarsMapClient() {
           <span className={styles.infoValue}>
             {mousePos ? mousePos.lng.toFixed(4) + "°" : "-"}
           </span>
+        </div>
+        <hr style={{ border: "1px solid #ff9966", margin: "10px 0" }} />
+        <div className={styles.infoItem}>
+          <span className={styles.infoLabel}>Labels:</span>
+          <span className={styles.infoValue}>{labelCount}</span>
         </div>
       </div>
     </div>
