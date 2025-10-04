@@ -1,0 +1,64 @@
+/* src/app/globals.scss */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+  color: #00f0ff;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.landing {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 40px;
+  padding: 20px;
+}
+
+.planet-card {
+  width: 220px;
+  height: 220px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.planet-card:hover {
+  transform: scale(1.5);
+}
+
+.planet-name {
+  position: absolute;
+  bottom: -30px;
+  width: 100%;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+}
+
+.title {
+  position: absolute;
+  top: 30px;
+  width: 100%;
+  text-align: center;
+  font-size: 2.5rem;
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+  z-index: 10;
+}
+
+.subtitle {
+  position: absolute;
+  top: 80px;
+  width: 100%;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #b9b9b9;
+  z-index: 10;
+}
