@@ -1,64 +1,74 @@
-// src/components/MarsMapClient.tsx
+// src/app/mars/MarsMapClient.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
-import styles from "./mars.module.scss";
-import "leaflet/dist/leaflet.css";
-
-// Fix Leaflet default icon issue
 import L from "leaflet";
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
-function MapEventHandler({
-  onMove,
-  onZoom,
-  onMouseMove,
-  onMouseOut,
-}: {
-  onMove: () => void;
-  onZoom: () => void;
-  onMouseMove: (e: any) => void;
-  onMouseOut: () => void;
-}) {
-  useMapEvents({
-    moveend: onMove,
-    zoomend: onZoom,
-    mousemove: onMouseMove,
-    mouseout: onMouseOut,
-  });
-  return null;
-}
+import "leaflet/dist/leaflet.css";
+import { PolygonManager } from "@/components/maps/PolygonManager";
+import styles from "./mars.module.scss";
 
 export default function MarsMapClient() {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
+  const [userId] = useState("user_123");
+  const [isDrawing, setIsDrawing] = useState(false);
+
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [mousePos, setMousePos] = useState<{ lat: number; lng: number } | null>(
     null
   );
-  const mapRef = useRef<any>(null);
 
-  const updateMapInfo = () => {
-    if (mapRef.current) {
-      const map = mapRef.current;
-      setZoom(map.getZoom());
-      setCenter(map.getCenter());
-    }
-  };
+  useEffect(() => {
+    if (!mapRef.current) return;
 
-  const handleMouseMove = (e: any) => {
-    setMousePos({ lat: e.latlng.lat, lng: e.latlng.lng });
-  };
+    const leafletMap = L.map(mapRef.current, {
+      center: [0, 0],
+      zoom: 1,
+      minZoom: 0,
+      maxZoom: 8,
+      maxBounds: [
+        [-90, -180],
+        [90, 180],
+      ],
+      crs: L.CRS.EPSG4326,
+      worldCopyJump: false,
+    });
 
-  const handleMouseOut = () => {
-    setMousePos(null);
-  };
+    L.tileLayer("http://localhost:8000/api/tiles/global/{z}/{x}/{y}.jpg", {
+      attribution: "NASA Mars Viking MDIM21",
+      noWrap: true,
+      errorTileUrl:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    }).addTo(leafletMap);
+
+    const updateMapInfo = () => {
+      setZoom(leafletMap.getZoom());
+      setCenter(leafletMap.getCenter());
+    };
+
+    const handleMouseMove = (e: L.LeafletMouseEvent) => {
+      setMousePos({ lat: e.latlng.lat, lng: e.latlng.lng });
+    };
+
+    const handleMouseOut = () => {
+      setMousePos(null);
+    };
+
+    leafletMap.on("moveend zoomend", updateMapInfo);
+    leafletMap.on("mousemove", handleMouseMove);
+    leafletMap.on("mouseout", handleMouseOut);
+
+    setMap(leafletMap);
+    updateMapInfo();
+
+    return () => {
+      leafletMap.off("moveend zoomend", updateMapInfo);
+      leafletMap.off("mousemove", handleMouseMove);
+      leafletMap.off("mouseout", handleMouseOut);
+      leafletMap.remove();
+    };
+  }, []);
 
   const getTileCoords = () => {
     const scale = Math.pow(2, zoom);
@@ -69,52 +79,35 @@ export default function MarsMapClient() {
   };
 
   return (
-    <div className={styles.marsContainer}>
-      <MapContainer
-        ref={mapRef}
-        center={[0, 0]}
-        zoom={1}
-        minZoom={0}
-        maxZoom={8}
-        maxBounds={[
-          [-90, -180],
-          [90, 180],
-        ]}
-        maxBoundsViscosity={1.0}
-        worldCopyJump={false}
-        style={{ height: "100%", width: "100%" }}
-        crs={L.CRS.EPSG4326}
+    <div className={`${styles.marsContainer} relative w-full h-screen`}>
+      <button
+        disabled={isDrawing}
+        onClick={() => !isDrawing && setIsDrawing(true)}
+        className={`absolute top-4 left-4 z-[1000] p-2 rounded shadow ${
+          isDrawing
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
+        }`}
       >
-        <TileLayer
-          url="http://10.186.81.13:8000/api/tiles/global/{z}/{x}/{y}.jpg"
-          attribution="NASA Mars Viking MDIM21"
-          noWrap={true}
-          errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-          eventHandlers={{
-            tileloadstart: (e) =>
-              console.log(
-                "📡 Loading tile:",
-                `${e.coords.z}/${e.coords.x}/${e.coords.y}`
-              ),
-            tileerror: (e) =>
-              console.error(
-                "❌ Tile error:",
-                `${e.coords.z}/${e.coords.x}/${e.coords.y}`
-              ),
-            tileload: (e) =>
-              console.log(
-                "✅ Tile loaded:",
-                `${e.coords.z}/${e.coords.x}/${e.coords.y}`
-              ),
-          }}
+        {isDrawing ? "✏️ Drawing..." : "✏️ Draw Area"}
+      </button>
+
+      {/* ✅ Map container with fixed height */}
+      <div
+        ref={mapRef}
+        className="absolute inset-0 z-0"
+        style={{ height: "100vh", width: "100%" }}
+      />
+
+      {map && (
+        <PolygonManager
+          map={map}
+          planet="mars"
+          userId={userId}
+          isDrawing={isDrawing}
+          onDrawingComplete={() => setIsDrawing(false)}
         />
-        <MapEventHandler
-          onMove={updateMapInfo}
-          onZoom={updateMapInfo}
-          onMouseMove={handleMouseMove}
-          onMouseOut={handleMouseOut}
-        />
-      </MapContainer>
+      )}
 
       <div className={styles.infoPanel}>
         <h3>🔴 Mars Explorer</h3>

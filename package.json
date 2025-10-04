@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@geoman-io/leaflet-geoman-free": "^2.18.3",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.3.0",
     "leaflet": "^1.9.4",
+    "leaflet-defaulticon-compatibility": "^0.1.2",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
