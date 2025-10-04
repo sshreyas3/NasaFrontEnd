@@ -62,3 +62,11 @@ body {
   color: #b9b9b9;
   z-index: 10;
 }
+
+// Ensure Geoman drawing layers are visible
+.leaflet-pm-temporary,
+.leaflet-pm-draggable {
+  z-index: 1000 !important;
+  display: block !important;
+  opacity: 1 !important;
+}

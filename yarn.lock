@@ -102,7 +102,7 @@
 
 "@geoman-io/leaflet-geoman-free@^2.18.3":
   version "2.18.3"
-  resolved "https://registry.yarnpkg.com/@geoman-io/leaflet-geoman-free/-/leaflet-geoman-free-2.18.3.tgz#a41489920b175931fba2a1e8e81347f9e3be5481"
+  resolved "https://registry.npmjs.org/@geoman-io/leaflet-geoman-free/-/leaflet-geoman-free-2.18.3.tgz"
   integrity sha512-XzxSKRk2UJUVeGiOt1jU2hyo412Qee1Q0Xsfw4A2r8EoUIo48XKSWfusYe7E53fSPr0aYgZxPevnFdcUXimpdA==
   dependencies:
     "@turf/boolean-contains" "^6.5.0"

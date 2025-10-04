@@ -6,12 +6,13 @@ import L, { LatLng } from "leaflet";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import "@geoman-io/leaflet-geoman-free";
 import { usePolygonCRUD } from "./usePolygonCRUD";
+import styles from "./PolygonManager.module.scss";
 
 interface PolygonManagerProps {
   map: L.Map;
   planet: string;
   userId: string;
-  isDrawing: boolean; // 🔴 New prop
+  isDrawing: boolean;
   onDrawingComplete: () => void;
 }
 
@@ -26,19 +27,17 @@ export function PolygonManager({
   const [coords, setCoords] = useState<[number, number][]>([]);
   const { polygons, createPolygon, refetch } = usePolygonCRUD(planet, userId);
 
-  // 🔴 Enable/disable drawing based on isDrawing prop
+  // Enable/disable drawing
   useEffect(() => {
     if (!map) return;
 
     if (isDrawing) {
-      // Enable polygon drawing
       map.pm.enableDraw("Polygon", {
         snappable: true,
         cursorMarker: true,
         allowSelfIntersection: false,
       });
     } else {
-      // Disable all drawing
       map.pm.disableDraw("Polygon");
     }
 
@@ -50,9 +49,8 @@ export function PolygonManager({
 
       setCoords(latLngs);
       setShowForm(true);
-      onDrawingComplete(); // 🔴 Exit drawing mode
+      onDrawingComplete();
 
-      // Optional: auto-remove if canceled
       layer.on("remove", () => {
         setShowForm(false);
       });
@@ -71,20 +69,18 @@ export function PolygonManager({
     if (!label.trim()) return;
     await createPolygon(label, coords);
     setShowForm(false);
-    refetch(); // Ensure new polygon appears
+    refetch();
   };
 
   const handleCancel = () => {
     setShowForm(false);
     onDrawingComplete();
-    // Geoman auto-removes incomplete layers
   };
 
-  // 🔴 Render saved polygons (same as before)
+  // Render saved polygons
   useEffect(() => {
     if (!map) return;
 
-    // Clean up previous layers
     const existing = (map as any)._polygonLayers || [];
     existing.forEach((layer: L.Layer) => map.removeLayer(layer));
     const newLayers: L.Layer[] = [];
@@ -96,7 +92,6 @@ export function PolygonManager({
         fillOpacity: 0.2,
       }).addTo(map);
 
-      // Add label at centroid
       const bounds = leafletPoly.getBounds();
       const center = bounds.getCenter();
       const label = L.marker(center, {
@@ -116,32 +111,29 @@ export function PolygonManager({
   return (
     <>
       {showForm && (
-        <div className="absolute top-16 left-4 z-[1000] bg-white p-4 rounded shadow-lg border">
+        <div className={styles.formContainer}>
           <input
             type="text"
             placeholder="Area name"
-            className="border p-2 rounded mb-2 w-48"
+            className={styles.inputField}
             onKeyDown={(e) => {
               if (e.key === "Enter")
                 handleSaveLabel((e.target as HTMLInputElement).value);
             }}
             autoFocus
           />
-          <div className="flex gap-2">
+          <div className={styles.buttonGroup}>
             <button
               onClick={(e) => {
                 const input = e.currentTarget
                   .previousElementSibling as HTMLInputElement;
                 handleSaveLabel(input.value);
               }}
-              className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+              className={styles.saveButton}
             >
               Save
             </button>
-            <button
-              onClick={handleCancel}
-              className="bg-gray-300 px-3 py-1 rounded text-sm"
-            >
+            <button onClick={handleCancel} className={styles.cancelButton}>
               Cancel
             </button>
           </div>
