@@ -82,6 +82,11 @@ export default function MarsMapPage() {
   const [selectedQuestionColor, setSelectedQuestionColor] = useState("#ff6b6b");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [showAnalyzeModal, setShowAnalyzeModal] = useState(false);
+  const [analyzeQuestion, setAnalyzeQuestion] = useState("");
+  const [analyzedData, setAnalyzedData] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   // Labels from API
   const [labels, setLabels] = useState<Label[]>([]);
 
@@ -380,7 +385,76 @@ export default function MarsMapPage() {
     showStatus("🗑️ Cleared search markers");
   };
 
-  const analyseData = () => {};
+  const analyseData = async () => {
+    if (!analyzeQuestion.trim()) {
+      showStatus("❌ Please enter a question", "error");
+      return;
+    }
+
+    if (!mapInstance.current) return;
+
+    const zoom = mapInstance.current.getZoom();
+    const center = mapInstance.current.getCenter();
+
+    // Convert lat/lng to tile coordinates (x, y) at current zoom
+    const lat = center.lat;
+    const lon = center.lng;
+    const z = Math.floor(zoom);
+
+    // Tile calculation for Web Mercator (EPSG:3857 style, but works for global grids)
+    const x = Math.floor(((lon + 180) / 360) * Math.pow(2, z));
+    const y = Math.floor(
+      ((1 -
+        Math.log(
+          Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)
+        ) /
+          Math.PI) /
+        2) *
+        Math.pow(2, z)
+    );
+
+    setIsAnalyzing(true);
+    setShowAnalyzeModal(false);
+    setAnalyzedData(null);
+    showStatus("🧠 Analyzing tile...");
+
+    try {
+      const response = await fetch(
+        `http://10.186.81.13:8000/api/ai/analyze-tile`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            dataset: "global",
+            z,
+            x,
+            y,
+            question: analyzeQuestion,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Assuming the API returns { answer: "..." } or similar
+      // Inside analyseData(), in the try block after getting `data`:
+      const result = data.analysis || "No analysis available.";
+      setAnalyzedData(result); // ← Only store the analysis text
+      showStatus("✅ Analysis complete!", "success");
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      showStatus("❌ Analysis failed", "error");
+      setAnalyzedData("Error: Could not retrieve analysis.");
+    } finally {
+      setIsAnalyzing(false);
+      setAnalyzeQuestion("");
+    }
+  };
 
   const toggleForumVisibility = () => {
     const visible = !forumLayersVisible;
@@ -574,10 +648,10 @@ export default function MarsMapPage() {
           <span>Clear Search</span>
         </button>
         <button
-          className={`${styles.btn} ${styles.clearBtn}`}
-          onClick={clearSearch}
+          className={`${styles.btn} ${styles.btnAnalyze}`}
+          onClick={() => setShowAnalyzeModal(true)}
         >
-          <span>🗑️</span>
+          <span>🧠</span>
           <span>Analyze</span>
         </button>
       </div>
@@ -621,7 +695,21 @@ export default function MarsMapPage() {
         </div>
         <div className={styles.divider}></div>
         <div className={styles.infoCard} style={{ gridColumn: "1 / -1" }}>
-          <div>hii</div>
+          <div className={styles.infoLabel}>Analyzed Data</div>
+          {isAnalyzing ? (
+            <div className={styles.infoValue}>🧠 Analyzing...</div>
+          ) : analyzedData ? (
+            <div
+              className={`${styles.infoValue} ${styles.analysisContent}`}
+              dangerouslySetInnerHTML={{
+                __html: analyzedData
+                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Convert **text** to <strong>
+                  .replace(/\n/g, "<br />"), // Preserve line breaks
+              }}
+            />
+          ) : (
+            <div className={styles.infoValue}>No analysis yet.</div>
+          )}
         </div>
       </div>
 
@@ -732,6 +820,39 @@ export default function MarsMapPage() {
               <button
                 className={`${styles.modalBtn} ${styles.secondary}`}
                 onClick={() => setShowQuestionModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analyze Modal */}
+      {showAnalyzeModal && (
+        <div className={`${styles.modalOverlay} ${styles.show}`}>
+          <div className={styles.modal}>
+            <h3>🧠 Analyze Current Area</h3>
+            <div className={styles.formGroup}>
+              <label>Your Question</label>
+              <textarea
+                value={analyzeQuestion}
+                onChange={(e) => setAnalyzeQuestion(e.target.value)}
+                placeholder="e.g., What geological features are visible here?"
+                rows={3}
+              />
+            </div>
+            <div className={styles.modalButtons}>
+              <button
+                className={`${styles.modalBtn} ${styles.primary}`}
+                onClick={analyseData}
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? "Analyzing..." : "Ask AI"}
+              </button>
+              <button
+                className={`${styles.modalBtn} ${styles.secondary}`}
+                onClick={() => setShowAnalyzeModal(false)}
               >
                 Cancel
               </button>
