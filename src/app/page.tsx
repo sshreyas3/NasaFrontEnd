@@ -1,11 +1,19 @@
 // src/app/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PlanetGlobe from "@/components/PlanetGlobe";
 
 export default function HomePage() {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const uid =
+      typeof window !== "undefined" ? sessionStorage.getItem("userId") : null;
+    setIsLoggedIn(!!uid);
+  }, []);
 
   const handlePlanetClick = (planet: string) => {
     router.push(`/${planet}`);
@@ -25,15 +33,17 @@ export default function HomePage() {
             <span className="logo-icon">🌌</span>
             <span className="logo-text">Planetary Explorer</span>
           </div>
-          <button className="login-btn glass-btn" onClick={handleLogin}>
-            <span>🚀</span>
-            <span>Login</span>
-          </button>
+          {!isLoggedIn && (
+            <button className="login-btn glass-btn" onClick={handleLogin}>
+              <span>🚀</span>
+              <span>Login</span>
+            </button>
+          )}
         </div>
 
         <div className="hero-section">
           <h1 className="title">Embiggen Your Eyes!</h1>
-          <p className="subtitle">Explore billion-pixel worlds from NASA</p>
+          <p className="subtitle">Explore Billion-pixel worlds from NASA</p>
         </div>
 
         <div className="planets-grid">
@@ -55,7 +65,7 @@ export default function HomePage() {
             <PlanetGlobe texture="/moon.jpg" name="Moon" />
             <div className="planet-info glass">
               <h3>Moon</h3>
-              <p>Earth's Satellite</p>
+              <p>Earths Satellite</p>
             </div>
           </div>
 

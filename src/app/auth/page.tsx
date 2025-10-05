@@ -1,11 +1,13 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./auth.module.scss";
 
-const API_BASE_URL = "http://192.168.0.124:8000"; // ✅ Updated IP
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+console.log(API_BASE_URL);
 
 export default function AuthPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [loginStatus, setLoginStatus] = useState<{
     message: string;
@@ -92,27 +94,27 @@ export default function AuthPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // ✅ Use `user_id` from response
-        sessionStorage.setItem("userId", data.user_id);
-        sessionStorage.setItem("username", username);
-
-        const successMessage =
-          type === "login"
-            ? `Welcome back! User ID: ${data.user_id}`
-            : `Registration successful! User ID: ${data.user_id}`;
-
         if (type === "login") {
-          setLoginStatus({ message: successMessage, type: "success" });
+          // Only set session on successful login and navigate home
+          sessionStorage.setItem("userId", String(data.user_id));
+          sessionStorage.setItem("username", username);
+          setLoginStatus({
+            message: `Welcome back! User ID: ${data.user_id}`,
+            type: "success",
+          });
+          setIsSubmitting(false);
+          setTimeout(() => {
+            router.push("/");
+          }, 800);
         } else {
-          setRegisterStatus({ message: successMessage, type: "success" });
+          // After registration, switch to login tab
+          setRegisterStatus({
+            message: "Registration successful! Please login.",
+            type: "success",
+          });
+          setIsSubmitting(false);
+          setActiveTab("login");
         }
-
-        setIsSubmitting(false);
-
-        // ✅ Redirect on BOTH login and register success
-        setTimeout(() => {
-          window.location.href = "/mars-explorer"; // or "/home" if that's your homepage
-        }, 1500);
       } else {
         const errorMessage =
           data.message ||
@@ -248,7 +250,7 @@ export default function AuthPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Email</label> {/* ✅ Added email field */}
+                  <label>Email</label>
                   <div className={styles.inputWrapper}>
                     <span className={styles.inputIcon}>✉️</span>
                     <input

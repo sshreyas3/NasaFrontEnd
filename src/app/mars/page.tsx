@@ -27,7 +27,7 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const USER_ID = 1; // Make dynamic if needed
 
 type Label = {
@@ -94,86 +94,109 @@ export default function MarsMapPage() {
 
   const currentDrawHandlerRef = useRef<any>(null);
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
-    const map = L.map(mapRef.current, {
-      crs: L.CRS.EPSG4326,
-      center: [0, 0],
-      zoom: 2,
-      minZoom: 1,
-      maxZoom: 7,
-      zoomSnap: 0.25,
-      zoomDelta: 0.5,
-      wheelPxPerZoomLevel: 120,
-      zoomAnimation: true,
-      fadeAnimation: true,
-      worldCopyJump: false,
-      maxBounds: [
-        [-90, -180],
-        [90, 180],
-      ],
-      maxBoundsViscosity: 1.0,
-    });
+    let resizeCleanup: (() => void) | null = null;
 
-    const tileLayer = L.tileLayer(
-      `${API_BASE_URL}/api/tiles/global/{z}/{x}/{y}.jpg`,
-      {
-        tms: false,
-        attribution: "© NASA Mars Viking MDIM21",
-        noWrap: true,
-        bounds: [
+    // Wait for size
+    const waitForSize = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (mapRef.current?.offsetWidth && mapRef.current?.offsetHeight) {
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+    };
+
+    waitForSize().then(() => {
+      if (!mapRef.current) return;
+
+      const map = L.map(mapRef.current, {
+        crs: L.CRS.EPSG4326,
+        center: [0, 0],
+        zoom: 2,
+        minZoom: 1,
+        maxZoom: 7,
+        zoomSnap: 0.25,
+        zoomDelta: 0.5,
+        wheelPxPerZoomLevel: 120,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        worldCopyJump: false,
+        maxBounds: [
           [-90, -180],
           [90, 180],
         ],
-        updateWhenIdle: false,
-        updateWhenZooming: true,
-        keepBuffer: 4,
-      }
-    );
+        maxBoundsViscosity: 1.0,
+      });
 
-    tileLayer.addTo(map);
+      const tileLayer = L.tileLayer(
+        `${API_BASE_URL}/api/tiles/global/{z}/{x}/{y}.jpg`,
+        {
+          tms: false,
+          attribution: "© NASA Mars Viking MDIM21",
+          noWrap: true,
+          bounds: [
+            [-90, -180],
+            [90, 180],
+          ],
+          updateWhenIdle: false,
+          updateWhenZooming: true,
+          keepBuffer: 4,
+        }
+      );
 
-    // Force initial tile load
-    setTimeout(() => {
-      map.invalidateSize();
-      tileLayer.redraw();
-    }, 100);
+      tileLayer.addTo(map);
 
-    const labelLayer = new L.FeatureGroup();
-    const questionLayer = new L.FeatureGroup();
-    const searchMarkersLayer = new L.FeatureGroup();
-    map.addLayer(labelLayer);
-    map.addLayer(questionLayer);
-    map.addLayer(searchMarkersLayer);
+      const labelLayer = new L.FeatureGroup();
+      const questionLayer = new L.FeatureGroup();
+      const searchMarkersLayer = new L.FeatureGroup();
+      map.addLayer(labelLayer);
+      map.addLayer(questionLayer);
+      map.addLayer(searchMarkersLayer);
 
-    labelLayerRef.current = labelLayer;
-    questionLayerRef.current = questionLayer;
-    searchMarkersLayerRef.current = searchMarkersLayer;
+      labelLayerRef.current = labelLayer;
+      questionLayerRef.current = questionLayer;
+      searchMarkersLayerRef.current = searchMarkersLayer;
 
-    mapInstance.current = map;
+      mapInstance.current = map;
 
-    const updateInfo = () => {
-      const center = map.getCenter();
-      setZoom(map.getZoom());
-      setLat(center.lat);
-      setLon(center.lng);
-    };
+      // Resize handler
+      const handleResize = () => map.invalidateSize();
+      window.addEventListener("resize", handleResize);
+      resizeCleanup = () => window.removeEventListener("resize", handleResize);
 
-    map.on("move", updateInfo);
-    map.on("zoom", updateInfo);
-    map.on("mousemove", (e) => {
-      setMousePos(`${e.latlng.lat.toFixed(4)}°, ${e.latlng.lng.toFixed(4)}°`);
+      const updateInfo = () => {
+        const center = map.getCenter();
+        setZoom(map.getZoom());
+        setLat(center.lat);
+        setLon(center.lng);
+      };
+
+      map.on("move", updateInfo);
+      map.on("zoom", updateInfo);
+      map.on("mousemove", (e) => {
+        setMousePos(`${e.latlng.lat.toFixed(4)}°, ${e.latlng.lng.toFixed(4)}°`);
+      });
+
+      updateInfo();
+      loadLabels();
     });
 
-    updateInfo();
-
-    // Load labels
-    loadLabels();
-
+    // Cleanup
     return () => {
-      map.remove();
+      if (resizeCleanup) {
+        resizeCleanup();
+      }
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
     };
   }, []);
 
