@@ -31,7 +31,7 @@ export default function HomePage() {
         <div className="top-bar glass">
           <div className="logo-section">
             <span className="logo-icon">🌌</span>
-            <span className="logo-text">Planetary Explorer</span>
+            <span className="logo-text">Cosmic Lens</span>
           </div>
           {!isLoggedIn && (
             <button className="login-btn glass-btn" onClick={handleLogin}>

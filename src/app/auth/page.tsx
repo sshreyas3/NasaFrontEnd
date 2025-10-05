@@ -147,7 +147,7 @@ export default function AuthPage() {
         <div className={styles.authBox}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>🔴</div>
-            <h1>Mars Explorer</h1>
+            <h1>Cosmic Lens</h1>
             <p>Collaborative Planetary Exploration</p>
           </div>
 
