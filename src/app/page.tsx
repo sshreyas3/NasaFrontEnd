@@ -11,36 +11,71 @@ export default function HomePage() {
     router.push(`/${planet}`);
   };
 
-  const handleLogin = (planet: string) => {
-    router.push(`/${planet}`);
+  const handleLogin = () => {
+    router.push(`/login`);
   };
 
   return (
-    <div className="landing">
-      <div className="title">Embiggen Your Eyes!</div>
-      <div className="subtitle">Explore billion-pixel worlds from NASA</div>
-      <div onClick={() => handleLogin("login")}>Login</div>
+    <>
+      <div className="landing">
+        <div className="stars"></div>
+        <div className="stars-layer-2"></div>
+        
+        <div className="top-bar glass">
+          <div className="logo-section">
+            <span className="logo-icon">🌌</span>
+            <span className="logo-text">Planetary Explorer</span>
+          </div>
+          <button className="login-btn glass-btn" onClick={handleLogin}>
+            <span>🚀</span>
+            <span>Login</span>
+          </button>
+        </div>
 
-      <div
-        onClick={() => handlePlanetClick("mars")}
-        style={{ outline: "none" }}
-      >
-        <PlanetGlobe texture="/mars.jpg" name="Mars" />
-      </div>
+        <div className="hero-section">
+          <h1 className="title">Embiggen Your Eyes!</h1>
+          <p className="subtitle">Explore billion-pixel worlds from NASA</p>
+        </div>
 
-      <div
-        onClick={() => handlePlanetClick("moon")}
-        style={{ outline: "none" }}
-      >
-        <PlanetGlobe texture="/moon.jpg" name="Moon" />
-      </div>
+        <div className="planets-grid">
+          <div
+            className="planet-wrapper"
+            onClick={() => handlePlanetClick("mars")}
+          >
+            <PlanetGlobe texture="/mars.jpg" name="Mars" />
+            <div className="planet-info glass">
+              <h3>Mars</h3>
+              <p>The Red Planet</p>
+            </div>
+          </div>
 
-      <div
-        onClick={() => handlePlanetClick("mercury")}
-        style={{ outline: "none" }}
-      >
-        <PlanetGlobe texture="/mercury.jpg" name="Mercury" />
+          <div
+            className="planet-wrapper"
+            onClick={() => handlePlanetClick("moon")}
+          >
+            <PlanetGlobe texture="/moon.jpg" name="Moon" />
+            <div className="planet-info glass">
+              <h3>Moon</h3>
+              <p>Earth's Satellite</p>
+            </div>
+          </div>
+
+          <div
+            className="planet-wrapper"
+            onClick={() => handlePlanetClick("mercury")}
+          >
+            <PlanetGlobe texture="/mercury.jpg" name="Mercury" />
+            <div className="planet-info glass">
+              <h3>Mercury</h3>
+              <p>Closest to the Sun</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="footer glass">
+          <p>Powered by NASA Imagery • Collaborative Exploration</p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

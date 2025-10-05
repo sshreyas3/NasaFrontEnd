@@ -1,73 +1,421 @@
 /* src/app/globals.scss */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: #000;
-  color: #00f0ff;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
 .landing {
   width: 100vw;
   height: 100vh;
   position: relative;
+  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Animated Stars Background */
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(2px 2px at 60% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 50%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 90% 60%, white, transparent),
+    radial-gradient(1px 1px at 33% 80%, white, transparent),
+    radial-gradient(1px 1px at 15% 45%, white, transparent);
+  background-size: 300% 300%;
+  animation: twinkle 8s infinite;
+  opacity: 0.7;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.stars-layer-2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 25% 75%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 85% 35%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 10% 90%, rgba(180, 190, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 95% 15%, rgba(255, 200, 180, 0.5), transparent);
+  background-size: 400% 400%;
+  animation: twinkle 12s infinite reverse;
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Glassmorphism Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Top Navigation Bar */
+.top-bar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
   display: flex;
-  justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 40px;
-  padding: 20px;
+  justify-content: space-between;
+  padding: 15px 30px;
+  border-radius: 50px;
+  width: calc(100% - 40px);
+  max-width: 1200px;
+  animation: slideDown 0.6s ease;
 }
 
-.planet-card {
-  width: 220px;
-  height: 220px;
-  position: relative;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.logo-text {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.glass-btn {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 24px;
+  border-radius: 25px;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-.planet-card:hover {
-  transform: scale(1.5);
-}
-
-.planet-name {
-  position: absolute;
-  bottom: -30px;
-  width: 100%;
+/* Hero Section */
+.hero-section {
+  position: relative;
+  z-index: 10;
   text-align: center;
-  font-size: 1.1rem;
-  color: #00f0ff;
-  text-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+  padding-top: 120px;
+  padding-bottom: 40px;
+  animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
-  position: absolute;
-  top: 30px;
-  width: 100%;
-  text-align: center;
-  font-size: 2.5rem;
-  color: #00f0ff;
-  text-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
-  z-index: 10;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  color: #ffffff;
+  font-weight: 800;
+  margin-bottom: 15px;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.4),
+               0 0 80px rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
 }
 
 .subtitle {
-  position: absolute;
-  top: 80px;
-  width: 100%;
-  text-align: center;
-  font-size: 1.1rem;
-  color: #b9b9b9;
-  z-index: 10;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-// Ensure Geoman drawing layers are visible
+/* Planets Grid */
+.planets-grid {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+  padding: 40px 20px;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.planet-wrapper {
+  position: relative;
+  width: 280px;
+  height: 320px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.6s ease backwards;
+
+  &:nth-child(1) { animation-delay: 0.2s; }
+  &:nth-child(2) { animation-delay: 0.4s; }
+  &:nth-child(3) { animation-delay: 0.6s; }
+
+  &:hover {
+    transform: translateY(-20px) scale(1.05);
+
+    .planet-globe {
+      box-shadow: 0 25px 70px rgba(255, 255, 255, 0.15),
+                  0 10px 40px rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .planet-info {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  &:active {
+    transform: translateY(-15px) scale(1.02);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.planet-globe {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
+              inset 0 0 50px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15), transparent 50%);
+    pointer-events: none;
+    z-index: 10;
+  }
+}
+
+.planet-info {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  text-align: center;
+  padding: 15px 20px;
+  border-radius: 15px;
+  transition: all 0.3s;
+
+  h3 {
+    font-size: 1.3rem;
+    color: #ffffff;
+    margin: 0 0 5px 0;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Footer */
+.footer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 12px 30px;
+  border-radius: 50px;
+  animation: slideUp 0.6s ease;
+
+  p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    margin: 0;
+    letter-spacing: 0.3px;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .planets-grid {
+    gap: 40px;
+  }
+
+  .planet-wrapper {
+    width: 240px;
+    height: 280px;
+  }
+
+  .planet-globe {
+    width: 240px;
+    height: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-bar {
+    padding: 12px 20px;
+    width: calc(100% - 30px);
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .hero-section {
+    padding-top: 100px;
+    padding-bottom: 30px;
+  }
+
+  .planets-grid {
+    gap: 30px;
+    padding: 30px 15px;
+  }
+
+  .planet-wrapper {
+    width: 200px;
+    height: 240px;
+
+    &:hover {
+      transform: translateY(-10px) scale(1.03);
+    }
+  }
+
+  .planet-globe {
+    width: 200px;
+    height: 200px;
+  }
+
+  .footer {
+    width: calc(100% - 30px);
+    p {
+      font-size: 11px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .planets-grid {
+    flex-direction: column;
+    gap: 25px;
+  }
+}
+
+/* Ensure Leaflet/Geoman drawing layers are visible */
 .leaflet-pm-temporary,
 .leaflet-pm-draggable {
   z-index: 1000 !important;
   display: block !important;
   opacity: 1 !important;
 }
-

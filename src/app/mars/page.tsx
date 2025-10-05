@@ -27,9 +27,8 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// const API_BASE_URL = "https://nasaspaceappchallenge-ijnb.onrender.com";
-const API_BASE_URL = "http://192.168.0.124:8000";
-const USER_ID = 102; // Make dynamic if needed
+const API_BASE_URL = 'http://localhost:8000';
+const USER_ID = 1; // Make dynamic if needed
 
 type Label = {
   id: number;
@@ -108,20 +107,36 @@ export default function MarsMapPage() {
       zoomSnap: 0.25,
       zoomDelta: 0.5,
       wheelPxPerZoomLevel: 120,
+      zoomAnimation: true,
+      fadeAnimation: true,
+      worldCopyJump: false,
       maxBounds: [
         [-90, -180],
         [90, 180],
       ],
+      maxBoundsViscosity: 1.0,
     });
 
-    L.tileLayer(`http://localhost:8000/api/tiles/global/{z}/{x}/{y}.jpg`, {
+    const tileLayer = L.tileLayer(`${API_BASE_URL}/api/tiles/global/{z}/{x}/{y}.jpg`, {
+      tms: false,
       attribution: "© NASA Mars Viking MDIM21",
       noWrap: true,
       bounds: [
         [-90, -180],
         [90, 180],
       ],
-    }).addTo(map);
+      updateWhenIdle: false,
+      updateWhenZooming: true,
+      keepBuffer: 4,
+    });
+    
+    tileLayer.addTo(map);
+    
+    // Force initial tile load
+    setTimeout(() => {
+      map.invalidateSize();
+      tileLayer.redraw();
+    }, 100);
 
     const labelLayer = new L.FeatureGroup();
     const questionLayer = new L.FeatureGroup();
@@ -171,7 +186,7 @@ export default function MarsMapPage() {
   const loadLabels = async () => {
     try {
       const res = await fetch(
-        `${API_BASE_URL}/labeget-labels/user_id/${USER_ID}?celestial_object=Mars`
+        `${API_BASE_URL}/labels/get-labels/user_id/${USER_ID}?celestial_object=Mars`
       );
       const data = await res.json();
       setLabels(data.labels || []);
@@ -344,16 +359,55 @@ export default function MarsMapPage() {
     return total;
   };
 
-  const handleSearchSubmit = (e: React.KeyboardEvent) => {
+  const getTileCoordinates = (lat: number, lon: number, zoom: number) => {
+    const n = Math.pow(2, zoom);
+    const x = Math.floor(((lon + 180) / 360) * n);
+    const latRad = (lat * Math.PI) / 180;
+    const y = Math.floor(
+      ((1 - Math.asinh(Math.tan(latRad)) / Math.PI) / 2) * n
+    );
+    return { x, y };
+  };
+
+  const prefetchTiles = async (lat: number, lon: number, zoom: number) => {
+    const tilesToFetch = [];
+    const tileCoords = getTileCoordinates(lat, lon, zoom);
+
+    // Fetch surrounding tiles
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const x = tileCoords.x + dx;
+        const y = tileCoords.y + dy;
+        const url = `${API_BASE_URL}/api/tiles/global/${zoom}/${x}/${y}.jpg`;
+        tilesToFetch.push(fetch(url).catch(() => {}));
+      }
+    }
+
+    try {
+      await Promise.all(tilesToFetch);
+    } catch (error) {
+      console.log("Tile prefetch completed with some errors");
+    }
+  };
+
+  const handleSearchSubmit = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isNavigating) {
       const coords = searchQuery.split(",").map((s) => parseFloat(s.trim()));
       if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         setIsNavigating(true);
+        const targetZoom = 7;
+        
+        showStatus("⏳ Loading high-resolution tiles...");
+        
+        // Prefetch tiles for smoother navigation
+        await prefetchTiles(coords[0], coords[1], targetZoom);
+        
         showStatus("✈️ Navigating to coordinates...");
-        mapInstance.current?.flyTo([coords[0], coords[1]], 7, {
+        mapInstance.current?.flyTo([coords[0], coords[1]], targetZoom, {
           duration: 3.5,
           easeLinearity: 0.15,
         });
+        
         setTimeout(() => {
           const marker = L.circleMarker([coords[0], coords[1]], {
             radius: 10,
@@ -371,7 +425,7 @@ export default function MarsMapPage() {
             )
             .openPopup();
           setIsNavigating(false);
-          showStatus("✅ Arrived!");
+          showStatus("✅ Arrived at destination!");
         }, 3500);
         setSearchQuery("");
       } else {
@@ -420,7 +474,7 @@ export default function MarsMapPage() {
 
     try {
       const response = await fetch(
-        `http://10.186.81.13:8000/api/ai/analyze-tile`,
+        `${API_BASE_URL}/api/ai/analyze-tile`,
         {
           method: "POST",
           headers: {
@@ -441,10 +495,8 @@ export default function MarsMapPage() {
       }
 
       const data = await response.json();
-      // Assuming the API returns { answer: "..." } or similar
-      // Inside analyseData(), in the try block after getting `data`:
       const result = data.analysis || "No analysis available.";
-      setAnalyzedData(result); // ← Only store the analysis text
+      setAnalyzedData(result);
       showStatus("✅ Analysis complete!", "success");
     } catch (err) {
       console.error("Analysis failed:", err);
@@ -703,8 +755,8 @@ export default function MarsMapPage() {
               className={`${styles.infoValue} ${styles.analysisContent}`}
               dangerouslySetInnerHTML={{
                 __html: analyzedData
-                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Convert **text** to <strong>
-                  .replace(/\n/g, "<br />"), // Preserve line breaks
+                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                  .replace(/\n/g, "<br />"),
               }}
             />
           ) : (
