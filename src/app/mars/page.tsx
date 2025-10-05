@@ -28,7 +28,15 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const USER_ID = 1; // Make dynamic if needed
+const getUserId = (): number => {
+  if (typeof window !== "undefined") {
+    const stored = sessionStorage.getItem("userId");
+    return stored ? parseInt(stored, 10) : 1; // fallback to 1 if not logged in
+  }
+  return 1; // SSR fallback
+};
+
+// Use inside component or functions as needed // Make dynamic if needed
 
 type Label = {
   id: number;
@@ -88,6 +96,14 @@ export default function MarsMapPage() {
 
   // Labels from API
   const [labels, setLabels] = useState<Label[]>([]);
+
+  const [currentPostId, setCurrentPostId] = useState<number | null>(null);
+  const [postDetails, setPostDetails] = useState<{
+    post: any;
+    comments: any[];
+  } | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   // Questions (local only for now – can extend to API later)
   const [questions, setQuestions] = useState<Record<string, any>>({});
@@ -211,8 +227,13 @@ export default function MarsMapPage() {
   // Load labels from API
   const loadLabels = async () => {
     try {
+      const userId =
+        typeof window !== "undefined"
+          ? parseInt(sessionStorage.getItem("userId") || "1", 10)
+          : 1;
+
       const res = await fetch(
-        `${API_BASE_URL}/labels/get-labels/user_id/${USER_ID}?celestial_object=Mars`
+        `${API_BASE_URL}/labels/get-labels/user_id/${userId}?celestial_object=Mars`
       );
       const data = await res.json();
       setLabels(data.labels || []);
@@ -554,8 +575,13 @@ export default function MarsMapPage() {
     const latlngs = (currentShape as Polygon).getLatLngs()[0] as LatLng[];
     const coordinates = latlngs.flatMap((ll) => [ll.lat, ll.lng]);
 
+    const userId =
+      typeof window !== "undefined"
+        ? parseInt(sessionStorage.getItem("userId") || "1", 10)
+        : 1;
+
     const payload = {
-      user_id: USER_ID,
+      user_id: userId,
       celestialObject: "Mars",
       title: labelTitle,
       description: labelDescription,
@@ -606,34 +632,79 @@ export default function MarsMapPage() {
     }
   };
 
-  const submitQuestion = () => {
+  const submitQuestion = async () => {
     if (!questionText.trim()) {
       showStatus("❌ Question required", "error");
       return;
     }
     if (!currentShape) return;
 
-    currentShape.setStyle({
-      color: selectedQuestionColor,
-      fillColor: selectedQuestionColor,
-      fillOpacity: 0.3,
-      weight: 3,
-    });
+    // Get user_id from sessionStorage
+    const userIdStr =
+      typeof window !== "undefined" ? sessionStorage.getItem("userId") : null;
+    const userId = userIdStr ? parseInt(userIdStr, 10) : null;
 
-    const id = uuidv4();
-    const qData = {
-      id,
-      question: questionText,
-      color: selectedQuestionColor,
-      coordinates: (currentShape as Polygon)
-        .getLatLngs()[0]
-        .map((ll: any) => [ll.lat, ll.lng]),
-      answers: [],
-      timestamp: new Date().toISOString(),
-      layer: currentShape,
-    };
+    if (!userId) {
+      showStatus("❌ You must be logged in to post a question.", "error");
+      return;
+    }
 
-    const popupContent = `
+    // Compute centroid as representative coordinate
+    const bounds = currentShape.getBounds();
+    const centroid = bounds.getCenter(); // LatLng object
+    const coordinates = [centroid.lng, centroid.lat]; // [lon, lat] — matches your example [129.2, 212.9]
+
+    // Optional: validate coordinates
+    if (isNaN(centroid.lat) || isNaN(centroid.lng)) {
+      showStatus("❌ Invalid area coordinates.", "error");
+      return;
+    }
+
+    // Submit to forum API
+    try {
+      const forumPayload = {
+        user_id: userId,
+        title: questionText.substring(0, 100), // Optional: truncate if too long
+        topic: "Mars",
+        content: questionText,
+        coordinates, // [lon, lat]
+      };
+
+      const res = await fetch(`${API_BASE_URL}/forum/create-post`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(forumPayload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Forum post failed:", errorData);
+        showStatus("❌ Failed to post question to forum.", "error");
+        return;
+      }
+
+      // Success: style and display on map
+      currentShape.setStyle({
+        color: selectedQuestionColor,
+        fillColor: selectedQuestionColor,
+        fillOpacity: 0.3,
+        weight: 3,
+      });
+
+      const id = uuidv4();
+      const qData = {
+        id,
+        question: questionText,
+        color: selectedQuestionColor,
+        coordinates: (currentShape as Polygon)
+          .getLatLngs()[0]
+          .map((ll: any) => [ll.lat, ll.lng]),
+        answers: [],
+        timestamp: new Date().toISOString(),
+        layer: currentShape,
+      };
+
+      const popupContent = `
       <div class="${styles.questionHeader}">
         <div class="${
           styles.questionIcon
@@ -648,27 +719,107 @@ export default function MarsMapPage() {
       }" onclick="window.expandQuestion('${id}')">📖 View Full Details & Answer</button>
     `;
 
-    currentShape.bindPopup(popupContent, { maxWidth: 350 });
-    questionLayerRef.current?.addLayer(currentShape);
+      currentShape.bindPopup(popupContent, { maxWidth: 350 });
+      questionLayerRef.current?.addLayer(currentShape);
 
-    setQuestions((prev) => ({ ...prev, [id]: qData }));
-    setQuestionCount((c) => c + 1);
-    setShowQuestionModal(false);
-    setQuestionText("");
-    setCurrentShape(null);
-    showStatus("✅ Question posted!");
+      setQuestions((prev) => ({ ...prev, [id]: qData }));
+      setQuestionCount((c) => c + 1);
+      setShowQuestionModal(false);
+      setQuestionText("");
+      setCurrentShape(null);
+      showStatus("✅ Question posted to forum!");
+    } catch (err) {
+      console.error("Network error posting question:", err);
+      showStatus("❌ Network error. Could not post question.", "error");
+    }
+  };
+
+  const submitComment = async () => {
+    if (!newComment.trim() || !currentPostId) return;
+
+    const userIdStr =
+      typeof window !== "undefined" ? sessionStorage.getItem("userId") : null;
+    const userId = userIdStr ? parseInt(userIdStr, 10) : null;
+
+    if (!userId) {
+      showStatus("❌ You must be logged in to comment.", "error");
+      return;
+    }
+
+    setIsSubmittingComment(true);
+
+    try {
+      const payload = {
+        post_id: currentPostId,
+        user_id: userId,
+        content: newComment.trim(),
+      };
+
+      const res = await fetch(`${API_BASE_URL}/forum/add-comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        // Optimistically add comment to UI
+        const newCommentObj = {
+          id: Date.now(), // temporary ID
+          user_id: userId,
+          content: newComment.trim(),
+          created_at: new Date().toISOString(),
+        };
+
+        setPostDetails((prev) =>
+          prev
+            ? {
+                ...prev,
+                comments: [...prev.comments, newCommentObj],
+              }
+            : null
+        );
+
+        setNewComment("");
+        showStatus("✅ Comment posted!");
+      } else {
+        showStatus("❌ Failed to post comment", "error");
+      }
+    } catch (err) {
+      console.error("Comment submission error:", err);
+      showStatus("❌ Network error", "error");
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   // Expose expandQuestion globally for popup onclick
   useEffect(() => {
-    (window as any).expandQuestion = (id: string) => {
-      // In a real app, you'd render a proper panel – for now, just log
-      alert(`Expand question ${id}`);
+    (window as any).expandQuestion = async (postId: string) => {
+      const id = parseInt(postId, 10);
+      if (isNaN(id)) return;
+
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/get-forum-thread?post_id=${id}`
+        );
+        if (!res.ok) throw new Error("Failed to load thread");
+        const data = await res.json();
+        setPostDetails({
+          post: data.post,
+          comments: data.comments || [],
+        });
+        setCurrentPostId(id);
+        setShowQuestionPanel(true);
+      } catch (err) {
+        console.error("Failed to load forum thread", err);
+        showStatus("❌ Could not load question details", "error");
+      }
     };
+
     return () => {
       delete (window as any).expandQuestion;
     };
-  }, [questions]);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -677,7 +828,6 @@ export default function MarsMapPage() {
       {/* Top Bar */}
       <div className={`${styles.topBar} ${styles.glass}`}>
         <div className={styles.searchContainer}>
-          <span>🔍</span>
           <input
             type="text"
             className={styles.searchInput}
@@ -960,19 +1110,96 @@ export default function MarsMapPage() {
       )}
 
       {/* Expandable Question Panel (stub) */}
-      {showQuestionPanel && (
+      {showQuestionPanel && postDetails && (
         <div className={`${styles.questionPanel} ${styles.open}`}>
           <div className={styles.panelHeader}>
             <h2>❓ Question Details</h2>
             <button
               className={styles.panelClose}
-              onClick={() => setShowQuestionPanel(false)}
+              onClick={() => {
+                setShowQuestionPanel(false);
+                setPostDetails(null);
+                setCurrentPostId(null);
+                setNewComment("");
+              }}
             >
               ✕
             </button>
           </div>
           <div className={styles.panelContent}>
-            <p>Question details would appear here.</p>
+            {/* Question */}
+            <div className={styles.forumPost}>
+              <div className={styles.forumHeader}>
+                <strong>{postDetails.post.title || "Untitled Question"}</strong>
+                <div className={styles.forumMeta}>
+                  By user {postDetails.post.user_id} •{" "}
+                  {new Date(postDetails.post.created_at).toLocaleString()}
+                </div>
+              </div>
+              <div className={styles.forumContent}>
+                {postDetails.post.content}
+              </div>
+              {postDetails.post.coordinates && (
+                <div className={styles.forumMeta} style={{ marginTop: "8px" }}>
+                  📍 Coordinates: [{postDetails.post.coordinates.join(", ")}]
+                </div>
+              )}
+            </div>
+
+            <div className={styles.divider} style={{ margin: "16px 0" }}></div>
+
+            {/* Comments */}
+            <div className={styles.commentsSection}>
+              <h3>💬 Comments ({postDetails.comments.length})</h3>
+              {postDetails.comments.length === 0 ? (
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  No comments yet. Be the first to reply!
+                </p>
+              ) : (
+                postDetails.comments.map((comment: any) => (
+                  <div key={comment.id} className={styles.forumComment}>
+                    <div className={styles.commentHeader}>
+                      <span>User {comment.user_id}</span>
+                      <span
+                        style={{
+                          fontSize: "0.8em",
+                          color: "rgba(255,255,255,0.6)",
+                        }}
+                      >
+                        {new Date(comment.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className={styles.commentContent}>
+                      {comment.content}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add Comment Form */}
+            <div className={styles.addCommentForm}>
+              <h3>✏️ Add a Comment</h3>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write your response..."
+                className={styles.formInput}
+                rows={3}
+              />
+              <button
+                className={`${styles.modalBtn} ${styles.primary}`}
+                onClick={submitComment}
+                disabled={isSubmittingComment || !newComment.trim()}
+              >
+                {isSubmittingComment ? "Posting..." : "Post Comment"}
+              </button>
+            </div>
           </div>
         </div>
       )}
