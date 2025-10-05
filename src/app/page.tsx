@@ -12,7 +12,7 @@ export default function HomePage() {
   };
 
   const handleLogin = () => {
-    router.push(`/login`);
+    router.push(`/auth`);
   };
 
   return (
@@ -20,7 +20,6 @@ export default function HomePage() {
       <div className="landing">
         <div className="stars"></div>
         <div className="stars-layer-2"></div>
-        
         <div className="top-bar glass">
           <div className="logo-section">
             <span className="logo-icon">🌌</span>

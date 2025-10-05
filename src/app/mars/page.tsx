@@ -27,7 +27,7 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = "http://localhost:8000";
 const USER_ID = 1; // Make dynamic if needed
 
 type Label = {
@@ -117,21 +117,24 @@ export default function MarsMapPage() {
       maxBoundsViscosity: 1.0,
     });
 
-    const tileLayer = L.tileLayer(`${API_BASE_URL}/api/tiles/global/{z}/{x}/{y}.jpg`, {
-      tms: false,
-      attribution: "© NASA Mars Viking MDIM21",
-      noWrap: true,
-      bounds: [
-        [-90, -180],
-        [90, 180],
-      ],
-      updateWhenIdle: false,
-      updateWhenZooming: true,
-      keepBuffer: 4,
-    });
-    
+    const tileLayer = L.tileLayer(
+      `${API_BASE_URL}/api/tiles/global/{z}/{x}/{y}.jpg`,
+      {
+        tms: false,
+        attribution: "© NASA Mars Viking MDIM21",
+        noWrap: true,
+        bounds: [
+          [-90, -180],
+          [90, 180],
+        ],
+        updateWhenIdle: false,
+        updateWhenZooming: true,
+        keepBuffer: 4,
+      }
+    );
+
     tileLayer.addTo(map);
-    
+
     // Force initial tile load
     setTimeout(() => {
       map.invalidateSize();
@@ -396,18 +399,18 @@ export default function MarsMapPage() {
       if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         setIsNavigating(true);
         const targetZoom = 7;
-        
+
         showStatus("⏳ Loading high-resolution tiles...");
-        
+
         // Prefetch tiles for smoother navigation
         await prefetchTiles(coords[0], coords[1], targetZoom);
-        
+
         showStatus("✈️ Navigating to coordinates...");
         mapInstance.current?.flyTo([coords[0], coords[1]], targetZoom, {
           duration: 3.5,
           easeLinearity: 0.15,
         });
-        
+
         setTimeout(() => {
           const marker = L.circleMarker([coords[0], coords[1]], {
             radius: 10,
@@ -473,22 +476,19 @@ export default function MarsMapPage() {
     showStatus("🧠 Analyzing tile...");
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/ai/analyze-tile`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            dataset: "global",
-            z,
-            x,
-            y,
-            question: analyzeQuestion,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/ai/analyze-tile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dataset: "global",
+          z,
+          x,
+          y,
+          question: analyzeQuestion,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);

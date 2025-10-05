@@ -10,14 +10,14 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 .landing {
   width: 100vw;
   height: 100vh;
   position: relative;
-  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -29,8 +29,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    radial-gradient(2px 2px at 20% 30%, white, transparent),
+  background-image: radial-gradient(2px 2px at 20% 30%, white, transparent),
     radial-gradient(2px 2px at 60% 70%, white, transparent),
     radial-gradient(1px 1px at 50% 50%, white, transparent),
     radial-gradient(1px 1px at 80% 10%, white, transparent),
@@ -50,8 +49,11 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.8), transparent),
+  background-image: radial-gradient(
+      1px 1px at 40% 20%,
+      rgba(255, 255, 255, 0.8),
+      transparent
+    ),
     radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.6), transparent),
     radial-gradient(1px 1px at 25% 75%, rgba(255, 255, 255, 0.7), transparent),
     radial-gradient(2px 2px at 85% 35%, rgba(255, 255, 255, 0.9), transparent),
@@ -65,8 +67,13 @@ body {
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Glassmorphism Effect */
@@ -75,8 +82,8 @@ body {
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Top Navigation Bar */
@@ -120,8 +127,13 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .logo-text {
@@ -187,7 +199,7 @@ body {
   font-weight: 800;
   margin-bottom: 15px;
   text-shadow: 0 0 40px rgba(255, 255, 255, 0.4),
-               0 0 80px rgba(255, 255, 255, 0.2);
+    0 0 80px rgba(255, 255, 255, 0.2);
   letter-spacing: 1px;
 }
 
@@ -221,16 +233,22 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeIn 0.6s ease backwards;
 
-  &:nth-child(1) { animation-delay: 0.2s; }
-  &:nth-child(2) { animation-delay: 0.4s; }
-  &:nth-child(3) { animation-delay: 0.6s; }
+  &:nth-child(1) {
+    animation-delay: 0.2s;
+  }
+  &:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.6s;
+  }
 
   &:hover {
     transform: translateY(-20px) scale(1.05);
 
     .planet-globe {
       box-shadow: 0 25px 70px rgba(255, 255, 255, 0.15),
-                  0 10px 40px rgba(0, 0, 0, 0.6);
+        0 10px 40px rgba(0, 0, 0, 0.6);
       border-color: rgba(255, 255, 255, 0.25);
     }
 
@@ -261,8 +279,7 @@ body {
   height: 280px;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
-              inset 0 0 50px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 50px rgba(0, 0, 0, 0.4);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(15px);
@@ -270,14 +287,18 @@ body {
   position: relative;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15), transparent 50%);
+    background: radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.15),
+      transparent 50%
+    );
     pointer-events: none;
     z-index: 10;
   }
@@ -418,4 +439,18 @@ body {
   z-index: 1000 !important;
   display: block !important;
   opacity: 1 !important;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
