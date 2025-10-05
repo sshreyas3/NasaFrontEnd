@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./auth.module.scss";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = "https://nasaspaceappchallenge-ijnb.onrender.com";
 console.log(API_BASE_URL);
 
 export default function AuthPage() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import styles from "./mars.module.scss";
+import styles from "./moon.module.scss";
 import L, {
   CircleMarker,
   FeatureGroup,
@@ -233,7 +233,7 @@ export default function MarsMapPage() {
           : 1;
 
       const res = await fetch(
-        `${API_BASE_URL}/labels/get-labels/user_id/${userId}?celestial_object=Mars`
+        `${API_BASE_URL}/labels/get-labels/user_id/${userId}?celestial_object=Moon`
       );
       const data = await res.json();
       setLabels(data.labels || []);
@@ -582,7 +582,7 @@ export default function MarsMapPage() {
 
     const payload = {
       user_id: userId,
-      celestialObject: "Mars",
+      celestialObject: "Moon",
       title: labelTitle,
       description: labelDescription,
       coordinates,
@@ -665,7 +665,7 @@ export default function MarsMapPage() {
       const forumPayload = {
         user_id: userId,
         title: questionText.substring(0, 100), // Optional: truncate if too long
-        topic: "Mars",
+        topic: "Moon",
         content: questionText,
         coordinates, // [lon, lat]
       };
