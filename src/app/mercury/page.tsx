@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import styles from "./moon.module.scss";
+import styles from "./mercury.module.scss";
 import L, {
   CircleMarker,
   FeatureGroup,
@@ -49,7 +49,7 @@ type Label = {
   updated_at: string;
 };
 
-export default function MoonMapPage() {
+export default function MercuryMapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map | null>(null);
   const labelLayerRef = useRef<FeatureGroup | null>(null);
@@ -152,10 +152,10 @@ export default function MoonMapPage() {
       });
 
       const tileLayer = L.tileLayer(
-        `${API_BASE_URL}/api/tiles/moon/{z}/{x}/{y}.jpg`,
+        `${API_BASE_URL}/api/tiles/mercury/{z}/{x}/{y}.jpg`,
         {
           tms: false,
-          attribution: "© NASA Moon Viking MDIM21",
+          attribution: "© NASA Mercury Viking MDIM21",
           noWrap: true,
           bounds: [
             [-90, -180],
@@ -233,7 +233,7 @@ export default function MoonMapPage() {
           : 1;
 
       const res = await fetch(
-        `${API_BASE_URL}/labels/get-labels/user_id/${userId}?celestial_object=Moon`
+        `${API_BASE_URL}/labels/get-labels/user_id/${userId}?celestial_object=Mercury`
       );
       const data = await res.json();
       setLabels(data.labels || []);
@@ -390,7 +390,7 @@ export default function MoonMapPage() {
   };
 
   const calculateDistance = (latlngs: LatLng[]): number => {
-    const R = 3389.5; // Moon radius in km
+    const R = 3389.5; // Mercury radius in km
     let total = 0;
     for (let i = 0; i < latlngs.length - 1; i++) {
       const lat1 = (latlngs[i].lat * Math.PI) / 180;
@@ -582,7 +582,7 @@ export default function MoonMapPage() {
 
     const payload = {
       user_id: userId,
-      celestialObject: "Moon",
+      celestialObject: "Mercury",
       title: labelTitle,
       description: labelDescription,
       coordinates,
@@ -665,7 +665,7 @@ export default function MoonMapPage() {
       const forumPayload = {
         user_id: userId,
         title: questionText.substring(0, 100), // Optional: truncate if too long
-        topic: "Moon",
+        topic: "Mercury",
         content: questionText,
         coordinates, // [lon, lat]
       };
@@ -894,7 +894,7 @@ export default function MoonMapPage() {
 
       {/* Side Panel */}
       <div className={`${styles.sidePanel} ${styles.glass}`}>
-        <h3>🔴 Moon Explorer</h3>
+        <h3>🔴 Mercury Explorer</h3>
         <div className={styles.infoGrid}>
           <div className={styles.infoCard}>
             <div className={styles.infoLabel}>Zoom</div>
