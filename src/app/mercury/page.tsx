@@ -2,7 +2,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import styles from "./mars.module.scss";
+import styles from "./mercury.module.scss";
 
 const MercuryMapContent = dynamic(() => import("./MercuryMapContent"), {
   ssr: false,
