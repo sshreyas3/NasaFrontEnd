@@ -11,10 +11,15 @@ export default function HomePage() {
     router.push(`/${planet}`);
   };
 
+  const handleLogin = (planet: string) => {
+    router.push(`/${planet}`);
+  };
+
   return (
     <div className="landing">
       <div className="title">Embiggen Your Eyes!</div>
       <div className="subtitle">Explore billion-pixel worlds from NASA</div>
+      <div onClick={() => handleLogin("login")}>Login</div>
 
       <div
         onClick={() => handlePlanetClick("mars")}
